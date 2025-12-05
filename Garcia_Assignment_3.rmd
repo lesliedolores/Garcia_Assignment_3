@@ -1,0 +1,129 @@
+---
+title: "Garcia_Assignment_3"
+author: "Leslie Garcia"
+date: "2025-12-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. 
+
+```{r}
+#install.packages("tidyverse") #comment again when installed
+#install.packages("here") #comment again when installed
+```
+
+#install.packages("tidyverse") #comment again when installed
+#install.packages("here") #comment again when installed
+```{r}
+library(tidyverse)
+library(here)
+```
+
+Load data
+```{r}
+#imdb <- read.csv(here("data","imdb_top_movies.csv"))
+imdb <- read_csv("/Users/lesliedoloresgarcia/Desktop/INF 6480_Statistics & Data Analysis/Assignments/Assignment 2/data/imdb_top_movies.csv")
+glimpse(imdb)
+#summary(Rating)
+#summary(Year)
+```
+Create a numeric duration variable from hours to minutes.
+```{r}
+library(stringr)
+
+imdb <- imdb %>%
+mutate(
+hours = str_extract(Duration, "\\d+(?=h)") %>% as.numeric(),
+mins  = str_extract(Duration, "\\d+(?=m)") %>% as.numeric(),
+Duration_min = hours * 60 + mins
+)
+
+imdb %>% 
+  reframe(summary = summary(Duration_min))
+
+```
+
+Exploratory Data Analysis
+```{r}
+imdb %>%
+select(Rating, Year, Duration_min) %>%
+summary()
+
+```
+Histograms
+```{r}
+ggplot(imdb, aes(x = Rating)) +
+geom_histogram(bins = 20) +
+labs(title = "Distribution of IMDb Ratings")
+
+ggplot(imdb, aes(x = Duration_min)) +
+geom_histogram(bins = 20) +
+labs(title = "Distribution of Movie Durations (minutes)")
+
+```
+Scatterplots with Rating
+```{r}
+ggplot(imdb, aes(x = Year, y = Rating)) +
+geom_point(alpha = 0.6) +
+geom_smooth(method = "lm", se = FALSE) +
+labs(title = "Rating vs Year")
+
+ggplot(imdb, aes(x = Duration_min, y = Rating)) +
+geom_point(alpha = 0.6) +
+geom_smooth(method = "lm", se = FALSE) +
+labs(title = "Rating vs Duration (minutes)")
+
+```
+
+Regression Model
+```{r}
+imdb_model <- imdb %>%
+drop_na(Rating, Year, Duration_min)
+
+```
+
+Build a regression model
+```{r}
+model1 <- lm(Rating ~ Year + Duration_min, data = imdb_model)
+summary(model1)
+
+```
+ 
+Evaluate the model
+```{r}
+par(mfrow = c(2, 2))
+plot(model1)
+par(mfrow = c(1, 1))
+
+```
+
+residual histogram 
+```{r}
+resid_df <- data.frame(resid = residuals(model1))
+
+ggplot(resid_df, aes(x = resid)) +
+geom_histogram(bins = 20) +
+labs(title = "Residuals Distribution")
+
+```
+Make predictions: predict ratings for new movies
+```{r}
+new_movies <- tibble(
+Title = c("Hypothetical Classic", "Hypothetical Modern Epic"),
+Year = c(1994, 2020),
+Duration_min = c(142, 180)
+)
+
+predictions <- predict(model1, newdata = new_movies, interval = "prediction")
+cbind(new_movies, as.data.frame(predictions))
+
+```
+
