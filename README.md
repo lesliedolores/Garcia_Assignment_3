@@ -1,0 +1,28 @@
+Regression Analysis Process using IMDb data
+For this assignment, I used the IMDb Top 250 movies dataset to examine how movie characteristics relate to IMDb ratings. The outcome (dependent) variable is Rating, a continuous score roughly ranging from 8.0 to 9.3. The two predictors I included in the regression model are Year (release year) and Duration_min (movie length in minutes). The duration in the original dataset was stored as a string, so I created a numeric duration variable by extracting the hours and minutes and converting everything to minutes.  After creating Duration_min, I conducted some basic exploratory data analysis (EDA). The summary statistics for the key variables show that ratings range from 8.0 to 9.3, with a mean of about 8.31. Release years span from 1921 to 2025 (mean ~1989), and movie durations range from 68 to 374 minutes, with an average of about 132 minutes. 
+Exploratory Data Analysis
+I first looked at univariate distributions. The histogram of Rating shows a fairly tight distribution concentrated between 8.0 and 8.5, which makes sense for a “top movies” list. Movie duration is more spread out, with most films between about 100 and 160 minutes, but with a few much longer outliers. Next, I examined bivariate relationships between Rating and the predictors. A scatterplot of Rating vs. Duration_min with a fitted linear smoother suggests a slight positive association: longer movies may tend to have slightly higher ratings. A scatterplot of Rating vs. Year, again with a linear smoother, does not show a strong trend over time; the line looks relatively flat. These patterns motivated a multiple linear regression where Rating is modeled as a function of both Year and Duration_min.
+Regression Model
+To build the model, I first removed rows with missing values in Rating, Year, or Duration_min and then fit a linear regression:
+Rating=β0+β1⋅Year+β2⋅Duration_min+ε\text{Rating} = \beta_0 + \beta_1 \cdot \text{Year} + \beta_2 \cdot \text{Duration\_min} + \varepsilonRating=β0+β1⋅Year+β2⋅Duration_min+ε 
+Using: lm(Rating ~ Year + Duration_min, data = imdb_model). 
+The intercept is the expected rating for a movie with Year = 0 and Duration_min = 0, which is not meaningful on its own but is part of the linear equation. The coefficient for Year is very close to zero and not statistically significant (p = 0.8988), suggesting that within this set of top movies, release year does not have a substantial linear relationship with rating once duration is controlled for. In contrast, the coefficient for Duration_min is positive and statistically significant (p = 0.000128). This implies that, on average, each additional minute of runtime is associated with about a 0.0016 increase in rating, holding year constant.
+Model Fit and Diagnostics
+Overall, the model explains a modest portion of the variability in ratings. The Multiple R-squared is about 0.059, and the Adjusted R-squared is about 0.052, meaning that Year and Duration_min together account for around 5–6% of the variation in rating. 
+The F-test for the overall model is significant (F(2, 246) = 7.76, p = 0.000542), indicating that the predictors, taken together, are related to Rating even though the effect size is small. I also examined standard diagnostic plots (residuals vs. fitted values, Q–Q plot, scale-location plot, and residuals vs. leverage) using the default plot(model1) output. The residuals appear roughly centered around zero with no extreme pattern. However, there is some mild heteroscedasticity and a few potential outliers, which is not surprising given the restricted rating range and the presence of very long movies. A separate histogram of residuals suggests they are approximately normal with some skew, but not dramatically non-normal. 
+
+Overall, the diagnostics do not show severe violations of linear model assumptions, but they do suggest that the model is relatively simple and leaves substantial variation unexplained.
+Predictions
+Finally, I used the fitted model to make predictions for two hypothetical movies: 
+1.	“Hypothetical Classic” (Year = 1994, Duration_min = 142)
+2.	“Hypothetical Modern Epic” (Year = 2020, Duration_min = 180)
+Using predict(model1, newdata = new_movies, interval = "prediction"), I obtained predicted ratings and 95% prediction intervals: 
+•	Hypothetical Classic:
+o	Predicted rating ≈ 8.33
+o	95% prediction interval: [7.89, 8.77]
+•	Hypothetical Modern Epic:
+o	Predicted rating ≈ 8.39
+o	95% prediction interval: [7.94, 8.83]
+These predictions illustrate the model’s main pattern: longer movies are predicted to have slightly higher ratings, while the difference in year between 1994 and 2020 barely changes the expected rating. The wide prediction intervals also highlight that, even for specific movie profiles, there is considerable uncertainty—many other unmodeled factors (such as genre, director, or critical reception) likely play essential roles in determining ratings.
+In summary, this regression analysis suggests that within the IMDb Top 250 movies, longer runtimes are modestly associated with higher ratings. At the same time, release year does not show a meaningful linear effect after accounting for duration. The model has statistically significant predictors but low explanatory power, indicating that movie ratings are influenced by many additional features beyond the two considered here. Future models could be improved by adding variables such as genre, certificate, and interaction terms to capture better the complexity of what makes a movie highly rated.
+<img width="468" height="630" alt="image" src="https://github.com/user-attachments/assets/307fa817-11db-4f1d-9446-881a3ea646e0" />
